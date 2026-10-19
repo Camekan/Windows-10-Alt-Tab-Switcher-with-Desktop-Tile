@@ -75,20 +75,32 @@ Open `desktop_alttab.py` in a text editor. The settings are near the top:
 
 First move the script to a permanent folder. If you move it later, the startup entry will break.
 
-### Option 1: Startup folder (simple, UAC prompt at each login)
+### Option 1: Startup folder with the included launcher (simple, UAC prompt at each login)
 
-1. Find where `pythonw.exe` is. Open Command Prompt, type `where pythonw`, and copy the path it prints (for example `C:\Users\YourName\AppData\Local\Programs\Python\Python312\pythonw.exe`).
-2. Press **Win + R**, type `shell:startup`, and press Enter. Anything in this folder runs when you sign in.
-3. In that folder, right-click an empty area and choose **New → Shortcut**.
-4. In the "Type the location of the item" box, enter the path to `pythonw.exe` in quotes, a space, then the path to the script in quotes. For example:
+This repo includes `start_alttab.vbs`, a tiny launcher that starts the script with no console window. You only edit one path and copy one file.
+
+1. Download `start_alttab.vbs` from this repo.
+2. Right-click it and choose **Edit** (or **Open with → Notepad**). You'll see this line:
 
    ```
-   "C:\Users\YourName\AppData\Local\Programs\Python\Python312\pythonw.exe" "C:\Users\YourName\Downloads\desktop_alttab.py"
+   WShell.Run "pythonw.exe ""C:\Users\YourName\Downloads\desktop_alttab.py""", 0, False
    ```
 
-5. Click **Next**, name it "Alt Tab Desktop", and click **Finish**. It starts at your next login.
+3. Replace only `C:\Users\YourName\Downloads\desktop_alttab.py` with the full path to where you saved `desktop_alttab.py`. Keep the quote marks around it exactly as they are. Tip: hold **Shift**, right-click `desktop_alttab.py`, choose **Copy as path**, paste it, and delete the quote marks Windows adds around it.
+4. Save the file and close Notepad.
+5. Press **Win + R**, type `shell:startup`, and press Enter. Anything in this folder runs when you sign in.
+6. Copy `start_alttab.vbs` into that folder (Ctrl+C, then Ctrl+V works fine for this file).
+7. To test it without restarting, double-click the copy in the Startup folder and accept the UAC prompt. Nothing visible opens, but Alt+Tab should now show the new switcher. It will also start at every login.
 
-Don't just copy `desktop_alttab.py` itself into the Startup folder, because a plain `.py` file may open in an editor instead of running.
+If nothing happens, Windows probably can't find `pythonw.exe`. Open Command Prompt and run `where pythonw`. If it prints a path, copy that path and use the full-path version of the line instead:
+
+```
+WShell.Run """C:\Users\YourName\AppData\Local\Programs\Python\Python312\pythonw.exe"" ""C:\Users\YourName\Downloads\desktop_alttab.py""", 0, False
+```
+
+If `where pythonw` finds nothing, reinstall Python and tick **Add python.exe to PATH** in the installer.
+
+Keep `desktop_alttab.py` in the same place afterwards. If you move it, update the path in the launcher.
 
 ### Option 2: Task Scheduler (no UAC prompt)
 
