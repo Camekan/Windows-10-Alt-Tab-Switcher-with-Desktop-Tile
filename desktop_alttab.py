@@ -46,11 +46,11 @@ kernel32 = ctypes.windll.kernel32
 ONLY_ACTIVE_WINDOW = False
 
 # Windows 10 widescreen live-preview layout settings
-MAX_COLS = 5
-CARD_W = 340
-CARD_H = 220
-HEADER_H = 26
-THUMB_PAD = 6
+MAX_COLS = 4
+CARD_W = 420
+CARD_H = 270
+HEADER_H = 30
+THUMB_PAD = 8
 
 BG_PANEL = "#181818"
 BG_BORDER = "#383838"
@@ -510,6 +510,8 @@ def activate(hwnd):
       else:
         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
     force_foreground(hwnd)
+    # Instantly cancel any Alt-menu tracking state in the target app
+    win32gui.SendMessage(hwnd, 0x001F, 0, 0)  # WM_CANCELMODE
   except Exception:
     pass
 
@@ -531,6 +533,7 @@ def minimize_monitor_windows(target_monitor, active_hwnd=None, exclude_hwnd=None
   shell = get_shell_window()
   if shell:
     force_foreground(shell)
+    win32gui.SendMessage(shell, 0x001F, 0, 0)  # WM_CANCELMODE
 
 
 # --- 5. Windows 10 Live-Preview Switcher with MRU Ordering ---
@@ -555,6 +558,9 @@ class Switcher:
     self.active_monitor = None
     self.active_hwnd_on_open = None
 
+    # Track whether Alt+Tab was actually used during this Alt session
+    self.alt_tab_used = False
+
     self.index = 0
     self.visible = False
     self.commands = queue.Queue()
@@ -577,28 +583,34 @@ class Switcher:
           user32.GetAsyncKeyState(win32con.VK_MENU) & 0x8000
       )
 
-      # 1. Never suppress Alt key events so Alt can NEVER get stuck
+      # Native Windows behavior: Suppress menu activation via unassigned dummy scan code (vkE8)
       if vk in (win32con.VK_MENU, win32con.VK_LMENU, win32con.VK_RMENU):
+        if is_down:
+          self.alt_tab_used = False
         if is_up:
           self.commands.put("release")
+          if self.alt_tab_used:
+            self.alt_tab_used = False
+            KEYEVENTF_KEYUP = 0x0002
+            user32.keybd_event(0xE8, 0, 0, 0)
+            user32.keybd_event(0xE8, 0, KEYEVENTF_KEYUP, 0)
+          self.alt_tab_used = False
         return user32.CallNextHookEx(self._hook_id, nCode, wParam, lParam)
 
-      # 2. Intercept Tab while Alt is held down
       if vk == win32con.VK_TAB and alt_down:
         if is_down:
+          self.alt_tab_used = True  # Mark that an Alt+Tab session occurred
           shift_down = bool(
               user32.GetAsyncKeyState(win32con.VK_SHIFT) & 0x8000
           )
           self.commands.put("prev" if shift_down else "next")
         return 1
 
-      # 3. Ctrl + Alt + Q to quit
       if vk == ord("Q") and is_down and alt_down:
         if user32.GetAsyncKeyState(win32con.VK_CONTROL) & 0x8000:
           self.commands.put("quit")
           return 1
 
-      # 4. Arrow keys & Escape while overlay is open
       if self.visible and is_down:
         if vk == win32con.VK_LEFT:
           self.commands.put("left")
@@ -673,6 +685,19 @@ class Switcher:
           self.commit()
     except queue.Empty:
       pass
+
+    # --- WATCHDOG: Automatically clear stuck modifiers if Alt isn't physically held ---
+    if not self.visible:
+      alt_physically_down = bool(
+          user32.GetAsyncKeyState(win32con.VK_MENU) & 0x8000
+      )
+      if self.alt_tab_used and not alt_physically_down:
+        # If hook missed the Alt-up event, force clear it immediately
+        release_stuck_modifiers()
+        self.alt_tab_used = False
+    # ----------------------------------------------------------------------------------
+
+    self.cached_windows = list_windows(self.overlay_hwnd)
 
     if self.visible:
       alt_down = bool(user32.GetAsyncKeyState(win32con.VK_MENU) & 0x8000)
@@ -817,12 +842,10 @@ class Switcher:
     x, y = (sw - w) // 2, (sh - h) // 2
 
     self.overlay.geometry(f"+{x}+{y}")
-    self.overlay.update()
 
-    # --- ADD THESE TWO LINES TO FIX THE INITIAL STUCK GLITCH ---
-    self.overlay.focus_force()
-    self.overlay.lift()
-    # -----------------------------------------------------------
+    # Full .update() is required so Windows maps the HWND and child coordinates
+    # before DwmRegisterThumbnail attaches Windows 10's live previews
+    self.overlay.update()
 
     self.overlay_hwnd = (
         user32.GetAncestor(self.overlay.winfo_id(), 2)
