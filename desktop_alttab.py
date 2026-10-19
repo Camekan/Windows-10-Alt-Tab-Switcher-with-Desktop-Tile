@@ -697,8 +697,6 @@ class Switcher:
         self.alt_tab_used = False
     # ----------------------------------------------------------------------------------
 
-    self.cached_windows = list_windows(self.overlay_hwnd)
-
     if self.visible:
       alt_down = bool(user32.GetAsyncKeyState(win32con.VK_MENU) & 0x8000)
       if not alt_down:
