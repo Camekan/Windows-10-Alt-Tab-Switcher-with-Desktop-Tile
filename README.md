@@ -1,6 +1,6 @@
 # Desktop Alt+Tab for Windows 10
 
-A custom Alt+Tab switcher for Windows 10 that brings back the **Desktop** entry from Windows 7. Select it to minimize your windows and land on the desktop, even from a fullscreen game where **Win+D** gets overridden.
+A custom Alt+Tab switcher for Windows 10 that brings back the **Desktop** entry from Windows 7. Select it to minimize your windows and land on the desktop.
 
 ## Features
 
@@ -119,7 +119,7 @@ Keep `desktop_alttab.py` in the same place afterwards. If you move it, update th
 ## Stopping and uninstalling
 
 - Press **Ctrl + Alt + Q** to quit. The normal Windows Alt+Tab returns immediately.
-- To stop it starting at login, delete the shortcut from the Startup folder or delete the task in Task Scheduler.
+- To stop it starting at login, delete start_alttab.vbs from the Startup folder (Win+R → shell:startup), or delete the task in Task Scheduler.
 - To remove it completely, delete `desktop_alttab.py`. The script installs nothing else.
 
 ## Important: games and anti-cheat
@@ -140,7 +140,7 @@ The script relaunches itself as administrator by default. Elevation only matters
 | `ModuleNotFoundError: No module named 'win32api'` | Run `pip install pywin32` |
 | `ModuleNotFoundError: No module named 'tkinter'` | Reinstall Python and keep "tcl/tk and IDLE" ticked |
 | Alt seems stuck after a crash | Tap and release **Alt** and **Shift** once |
-| Nothing happens in some apps | The app may be elevated. Run the script as administrator |
+| Nothing happens in some apps | The app may be running as a different user, or the game’s anti-cheat may block the hook. |
 | A window is missing from the list | Hidden, tool-style, and background windows are skipped, like in the normal Alt+Tab |
 
 ## Limitations
