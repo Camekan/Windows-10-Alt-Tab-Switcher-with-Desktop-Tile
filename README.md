@@ -77,16 +77,18 @@ First move the script to a permanent folder. If you move it later, the startup e
 
 ### Option 1: Startup folder (simple, UAC prompt at each login)
 
-1. Press **Win + R**, type `shell:startup`, and press Enter. Anything in this folder runs when you sign in.
-2. In another File Explorer window, find `desktop_alttab.py`.
-3. **Right-click the file and drag it** into the Startup folder, release, and choose **Create shortcuts here**. Don't copy the file itself, because a plain `.py` file may open in an editor instead of running.
-4. Right-click the new shortcut, choose **Properties**, and set **Target** to the following, using your own path:
+1. Find where `pythonw.exe` is. Open Command Prompt, type `where pythonw`, and copy the path it prints (for example `C:\Users\YourName\AppData\Local\Programs\Python\Python312\pythonw.exe`).
+2. Press **Win + R**, type `shell:startup`, and press Enter. Anything in this folder runs when you sign in.
+3. In that folder, right-click an empty area and choose **New → Shortcut**.
+4. In the "Type the location of the item" box, enter the path to `pythonw.exe` in quotes, a space, then the path to the script in quotes. For example:
 
    ```
-   pythonw "C:\Users\YourName\Downloads\desktop_alttab.py"
+   "C:\Users\YourName\AppData\Local\Programs\Python\Python312\pythonw.exe" "C:\Users\YourName\Downloads\desktop_alttab.py"
    ```
 
-5. Click OK. It starts at your next login.
+5. Click **Next**, name it "Alt Tab Desktop", and click **Finish**. It starts at your next login.
+
+Don't just copy `desktop_alttab.py` itself into the Startup folder, because a plain `.py` file may open in an editor instead of running.
 
 ### Option 2: Task Scheduler (no UAC prompt)
 
@@ -134,7 +136,3 @@ The script relaunches itself as administrator by default. Elevation only matters
 - Windows only
 - Overlay is always centered on the primary monitor
 - Live previews depend on Windows' DWM, so some protected or hardware-accelerated windows may show blank previews
-
-## License
-
-Add your license here (for example MIT).
