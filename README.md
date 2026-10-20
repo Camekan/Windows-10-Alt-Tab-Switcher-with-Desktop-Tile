@@ -2,6 +2,12 @@
 
 A custom Alt+Tab switcher for Windows 10 that brings back the **Desktop** entry from Windows 7. Select it to minimize your windows and land on the desktop.
 
+
+<img width="810" height="455" alt="ss2-ezgif com-optimize(1)" src="https://github.com/user-attachments/assets/d646ed3e-ee8a-4090-b9ff-06030a7610c5" />
+
+
+
+
 ## Features
 
 - **Desktop card** in the switcher, showing your wallpaper
